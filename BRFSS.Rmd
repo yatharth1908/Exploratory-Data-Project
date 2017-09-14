@@ -1,0 +1,182 @@
+---
+title: "DATA ANALYSIS PROJECT
+DATASET - BEHAVIORAL RISK FACTOR SURVEILLANCE SYSTEM (BRFSS)"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###Compiled By - Yatharth Garg  
+###Date - 7/15/2017
+
+#Introduction:
+The Behavioral Risk Factor Surveillance System (BRFSS) collects data about the people residing in the United States of America regarding their health problems and use of preventive services.
+“ The Behavioral Risk Factor Surveillance System (BRFSS) is a collaborative project between all of the states in the United States (US) and participating US territories and the Centers for Disease Control and Prevention (CDC). The BRFSS is administered and supported by CDC's Population Health Surveillance Branch, under the Division of Population Health at the National Center for Chronic Disease Prevention and Health Promotion. BRFSS is an ongoing surveillance system designed to measure behavioral risk factors for the non-institutionalized adult population (18 years of age and older) residing in the US. The BRFSS was initiated in 1984, with 15 states collecting surveillance data on risk behaviors through monthly telephone interviews. Over time, the number of states participating in the survey increased; by 2001, 50 states, the District of Columbia, Puerto Rico, Guam, and the US Virgin Islands were participating in the BRFSS. Today, all 50 states, the District of Columbia, Puerto Rico, and Guam collect data annually and American Samoa, Federated States of Micronesia, and Palau collect survey data over a limited point- in-time (usually one to three months). In this document, the term “state” is used to refer to all areas participating in BRFSS, including the District of Columbia, Guam, and the Commonwealth of Puerto Rico.
+The BRFSS objective is to collect uniform, state-specific data on preventive health practices and risk behaviors that are linked to chronic diseases, injuries, and preventable infectious diseases that affect the adult population. Factors assessed by the BRFSS in 2013 include tobacco use, HIV/AIDS knowledge and prevention, exercise, immunization, health status, healthy days — health-related quality of life, health care access, inadequate sleep, hypertension awareness, cholesterol awareness, chronic health conditions, alcohol consumption, fruits and vegetables consumption, arthritis burden, and seatbelt use. Since 2011, BRFSS conducts both landline telephone- and cellular telephone-based surveys. In conducting the BRFSS landline telephone survey, interviewers collect data from a randomly selected adult in a household. In conducting the cellular telephone version of the BRFSS questionnaire, interviewers collect data from an adult who participates by using a cellular telephone and resides in a private residence or college housing.
+Health characteristics estimated from the BRFSS pertain to the non-institutionalized adult population, aged 18 years or older, who reside in the US. In 2013, additional question sets were included as optional modules to provide a measure for several childhood health and wellness indicators, including asthma prevalence for people aged 17 years or younger." Source: Duke University Data and Visualization Services.
+
+#Loading packages
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+```
+#Loading Data
+```{r}
+load("/Users/Yatharth/Downloads/Project/_384b2d9eda4b29131fb681b243a7767d_brfss2013.RData")
+```
+#Data
+The Behavioral Risk Factor Surveillance System (BRFSS) collects state data regarding their health-related risk behaviors, chronic health conditions, and use of preventive services. The respondents are the non-institutionalized adults of 18 years or older residing in the US.In conducting the cellular telephone version of the BRFSS questionnaire, interviewers collect data from an adult who participates by using a cellular telephone and resides in a private residence or college housing. An 80% of calling occasions for the surveys are generally scheduled on weekends and the rest on weekdays.
+A sample size of at least 4000 per state per year is maintained by BRFSS. States determine that they would like to sample by county, public health district or other sub-state geography in order to make comparisons of geographic areas with their states. In order to conduct the BRFSS, states obtain samples of telephone numbers from CDC. States then review their sampling methodology with a state statistician and CDC to make sure data collection procedures are in place to follow the methodology. If any change in sampling methodology is considered, states consult with CDC before making changes. The BRFSS uses two samples: one for landline telephone respondents and one for cellular telephone respondents.
+Because a sizable number of surveys are based on registered cell phone numbers, people not using cell phones or sharing a phone number could be ignored in the survey. For the landline based surveys, the problem of non-response has been dealt by making attempts in calling back.
+
+#Research Questions
+
+#####Question-1
+```
+What is the distributon of health conditions?
+Variables:
+    physhlth: Number Of Days Physical Health Not Good
+    menthlth: Number Of Days Mental Health Not Good
+    poorhlth: Poor Physical Or Mental Health
+ 
+```
+
+#####Question-2
+
+```
+If there exists any relation between how many hours one sleeps and certain health conditions such as Heart Attack, Depressive Disorder etc.
+Variable:
+    sleptim1: How Much Time Do You Sleep
+    cvdinfr4: Ever Diagnosed With Heart Attack
+    addepev2: Ever Told You Had A Depressive Disorder
+    
+```
+
+#####Question-3
+
+```
+If health condition such as Heart Attack can be predicted using sleep time, Cholesterol, blood pressure etc.
+Variable:
+    cvdinfr4: Ever Diagnosed With Heart Attack
+    bloodcho: Ever Had Blood Cholesterol Checked
+    cholchk: How Long Since Cholesterol Checked
+    toldhi2: Ever Told Blood Cholesterol High
+    bphigh4: Ever Told Blood Pressure High
+    sleptim1: How Much Time Do You Sleep
+```
+
+#Data Analysis
+###1:
+```{r}
+hist(brfss2013$physhlth, main = "Physical Health Histogram", xlab = "Physical Health")
+```
+```{r}
+hist(brfss2013$menthlth, main="Mental Health Histogram", xlab="Mental Health")
+```
+```{r}
+hist(brfss2013$poorhlth, main="Health Histogram", xlab="Poor Physical Or Mental Health")
+```
+
+###2
+```{r, message=FALSE, warning=FALSE}
+# Data Subset
+vars <- names(brfss2013) %in% c("sleptim1", "cvdinfr4", "addepev2")
+subdata <- brfss2013[vars]
+# Backup
+subdata1 <- subdata
+# Converting the factor levels to numerical Values
+subdata1$addepev2 <- ifelse(subdata$addepev2=="Yes", 1, 0)
+subdata1$cvdinfr4 <- ifelse(subdata$cvdinfr4=="Yes", 1, 0)
+# Removing NULL rows
+library(Hmisc)
+
+subdata1 <- na.delete(subdata1)
+# Finding the correlation and plotting it
+cor(subdata1)
+```
+```{r}
+library(corrplot)
+M <- cor(subdata1)
+corrplot(M, method="ellipse")
+```
+
+```
+Looking at the results, we can infer:
+
+   1. Sleep time and Depressive Disorder have negative correlation, which means that if one person is sleeping less, chances for Depressive Disorder are higher (this is not a causation, but just an initial inference). 
+   2. 'Sleep time' and 'Ever Diagnosed With Heart Attack' show that there is almost no relation between them (corerlation is almost zero)
+
+```
+
+###3
+####Preparing the Data
+
+```{r}
+# Create a subset of data
+vars <- names(brfss2013) %in% c("cvdinfr4", "bloodcho", "toldhi2", "bphigh4", "sleptim1")
+subdata <- brfss2013[vars]
+```
+
+####Total NULL values in each column of the subdata
+
+```{r}
+MissingData <- function(x){sum(is.na(x))/length(x)*100}
+apply(subdata, 2, MissingData)
+```
+
+####NULL Values seen
+```{r}
+summary(subdata$bloodcho)
+```
+
+```{r}
+# Replace N/A with "NO"
+subdata$bloodcho <- replace(subdata$bloodcho, which(is.na(subdata$bloodcho)), "No")
+#Checking the changes made
+summary(subdata$bloodcho)
+# Sleep time N/A to be replaced with the mean
+summary(subdata$sleptim1)
+mean(subdata$sleptim1,na.rm = T)
+subdata$sleptim1 <- replace(subdata$sleptim1, which(is.na(subdata$sleptim1)), 7)
+#Checking the changes made
+summary(subdata$sleptim1)
+summary(subdata$toldhi2)
+subdata$toldhi2 <- replace(subdata$toldhi2, which(is.na(subdata$toldhi2)), "No")
+#Checking the changes made
+summary(subdata$toldhi2)
+summary(subdata$cvdinfr4)
+subdata$cvdinfr4 <- replace(subdata$cvdinfr4, which(is.na(subdata$cvdinfr4)), "No")
+#Checking the changes made
+summary(subdata$cvdinfr4)
+```
+####High Blood Pressure Data
+```{r}
+# Backup
+subdata1 <- subdata
+# Table the data
+table(subdata1$bphigh4)
+# Converting factor levels into proper factor levels
+subdata1$bphigh4 <- as.factor(ifelse(subdata1$bphigh4=="Yes", "Yes", 
+                           (ifelse(subdata1$bphigh4=="Yes, but female told only during pregnancy", "Yes",
+                           (ifelse(subdata1$bphigh4=="Told borderline or pre-hypertensive", "Yes",
+                                   "No"))))))
+# Table
+summary(subdata1$bphigh4)
+# Class of subdata
+class(subdata1)
+```
+####Using binomial method, we can fit the data for logistic regression
+```{r}
+# Summarizing the data
+summary(subdata1)
+# Fit the logistic regression
+fit <- glm(cvdinfr4 ~ ., data=subdata1, family = "binomial")
+```
+###SUMMARIZING THE MODEL
+```{r}
+summary(fit)
+```
+
+In conclusion, the model shows that the sleeping time is insignificant in predicting the heart attack conditions while other variables are highly significant.
